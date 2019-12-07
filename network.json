@@ -16,6 +16,18 @@
             "metadata": {
                 "description": "IP Address Prefix for VNET and Subnets, template assumes carving xx.xx.0.0/20"
             }
+        },
+        "tagOwner": {
+            "defaultValue": "someone@somedomain.com",
+            "type": "String"
+        },
+        "tagEnvironment": {
+            "defaultValue": "Production Pilot",
+            "type": "String"
+        },
+        "tagBuisnessUnit": {
+            "defaultValue": "IT",
+            "type": "String"
         }
     },
     "variables": {
@@ -28,7 +40,9 @@
             "name": "[parameters('virtualNetworkname')]",
             "location": "[parameters('location')]",
             "tags": {
-                "creationDate": "2019-12-07T16:43:14.0019714Z"
+                "owner": "[parameters('tagOwner')]",
+                "environment": "[parameters('tagEnvironment')]",
+                "buisnessunit": "[parameters('tagBuisnessUnit')]"
             },
             "properties": {
                 "addressSpace": {
