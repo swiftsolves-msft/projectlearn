@@ -1,0 +1,110 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "defaultValue": "eastus",
+            "type": "String"
+        },
+        "virtualNetworkName": {
+            "defaultValue": "WVD-VNET",
+            "type": "String"
+        },
+        "ipAddrPrefix": {
+            "defaultValue": "10.101",
+            "type": "string",
+            "metadata": {
+                "description": "IP Address Prefix for VNET and Subnets, template assumes carving xx.xx.0.0/20"
+            }
+        }
+    },
+    "variables": {
+        "ipAddr": "[concat(parameters('ipAddrPrefix'), '.0.0/20')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2019-09-01",
+            "name": "[parameters('virtualNetworkname')]",
+            "location": "[parameters('location')]",
+            "tags": {
+                "creationDate": "2019-12-07T16:43:14.0019714Z"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('ipAddr')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "WVDPools",
+                        "properties": {
+                            "addressPrefix": "[concat(parameters('ipAddrPrefix'), '.3.0/24')]",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    },
+                    {
+                        "name": "Identity",
+                        "properties": {
+                            "addressPrefix": "[concat(parameters('ipAddrPrefix'), '.1.0/28')]",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    },
+                    {
+                        "name": "AzureFirewallSubnet",
+                        "properties": {
+                            "addressPrefix": "[concat(parameters('ipAddrPrefix'), '.0.64/26')]",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    },
+                    {
+                        "name": "Applications",
+                        "properties": {
+                            "addressPrefix": "[concat(parameters('ipAddrPrefix'), '.2.0/24')]",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    },
+                    {
+                        "name": "GatewaySubnet",
+                        "properties": {
+                            "addressPrefix": "[concat(parameters('ipAddrPrefix'), '.0.0/28')]",
+                            "serviceEndpoints": [],
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    },
+                    {
+                        "name": "ANF",
+                        "properties": {
+                            "addressPrefix": "[concat(parameters('ipAddrPrefix'), '.1.16/28')]",
+                            "serviceEndpoints": [],
+                            "delegations": [
+                                {
+                                    "name": "deebf061875b498c921935cbfdb8e596",
+                                    "properties": {
+                                        "serviceName": "Microsoft.Netapp/volumes"
+                                    }
+                                }
+                            ],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    }
+                ],
+                "virtualNetworkPeerings": [],
+                "enableDdosProtection": false,
+                "enableVmProtection": false
+            }
+        }
+    ]
+}
