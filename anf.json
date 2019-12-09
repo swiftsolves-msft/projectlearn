@@ -1,0 +1,136 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "accountName": {
+            "defaultValue": "ANF",
+            "type": "string",
+            "metadata": {
+                "description": "Your company name ANF"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "eastus"
+        },
+        "localdomainuser": {
+        "defaultValue": "Administrator",
+        "type": "string",
+            "metadata": {
+                "description": "Your local AD forest Domain Admin username"
+            }
+        },
+        "localdomainpass": {
+        "defaultValue": "Administrator",
+        "type": "securestring",
+            "metadata": {
+                "description": "Your local AD forest Domain Admin password"
+            }
+        },
+        "localdomain": {
+        "type": "string",
+            "metadata": {
+                "description": "Your local AD forest Domain name xxxxxx.local or xxxxxx.com"
+            }
+        },
+        "dnsservers": {
+        "type": "string",
+        "defaultValue": "10.101.1.4,10.101.1.5",
+            "metadata": {
+                "description": "Your local dns servers to resolve domain name to ex: 10.101.1.4,168.63.129.16"
+            }
+        },
+        "subnetref": {
+        "type": "string",
+        "defaultValue": "/subscriptions/XXXX-XXX-XXX-XXXX/resourceGroups/rgXXX/providers/Microsoft.Network/virtualNetworks/WVD-VNET/subnets/ANF",
+            "metadata": {
+                "description": "Your subnet reference in ARM properties VNET-Subnet"
+            }
+        },
+        "tagOwner": {
+            "defaultValue": "someone@somedomain.com",
+            "type": "String"
+        },
+        "tagEnvironment": {
+            "defaultValue": "Production Pilot",
+            "type": "String"
+        },
+        "tagBuisnessUnit": {
+            "defaultValue": "IT",
+            "type": "String"
+        }
+    },
+    "variables": {
+        "apiVersion": "2019-07-01"
+    },
+    "resources": [
+        {
+            "name": "[parameters('accountName')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.NetApp/netAppAccounts",
+            "location": "[parameters('location')]",
+            "tags": {
+                "owner": "[parameters('tagOwner')]",
+                "environment": "[parameters('tagEnvironment')]",
+                "buisnessunit": "[parameters('tagBuisnessUnit')]"
+            },
+            "properties": {
+                "activeDirectories": [
+                    {
+                        "username": "[parameters('localdomainuser')]",
+                        "password": "[parameters('localdomainpass')]",
+                        "domain": "[parameters('localdomain')]",
+                        "dns": "[parameters('dnsservers')]",
+                        "smbServerName": "anf",
+                        "organizationalUnit": "CN=Computers"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.NetApp/netAppAccounts/capacityPools",
+            "apiVersion": "2019-08-01",
+            "name": "[concat(parameters('accountName'), '/wvdanfpool')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.NetApp/netAppAccounts', parameters('accountName'))]"
+            ],
+            "tags": {},
+            "properties": {
+                "serviceLevel": "Standard",
+                "size": 4398046511104
+            }
+        },
+        {
+            "type": "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
+            "apiVersion": "2019-08-01",
+            "name": "[concat(parameters('accountName'), '/wvd', parameters('accountName'), 'pool/userprofile')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools', parameters('accountName'), concat('wvd', parameters('accountName'), 'pool'))]",
+                "[resourceId('Microsoft.NetApp/netAppAccounts', parameters('accountName'))]"
+            ],
+            "tags": {
+            },
+            "properties": {
+                "serviceLevel": "Standard",
+                "creationToken": "userprofile",
+                "usageThreshold": 3324304687104,
+                "exportPolicy": {
+                    "rules": []
+                },
+                "protocolTypes": [
+                    "CIFS"
+                ],
+                "subnetId": "[parameters('subnetref')]",
+                "mountTargets": [
+                    {
+                        "mountTargetId": "f155c30e-50bc-7b60-f98a-0418de622fc8",
+                        "fileSystemId": "f155c30e-50bc-7b60-f98a-0418de622fc8"
+
+                    }
+                ]
+            }
+        }
+    ]
+}
